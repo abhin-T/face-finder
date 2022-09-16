@@ -4,6 +4,7 @@ import "./app.css";
 import React from "react";
 import * as faceapi from "face-api.js";
 import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 
 export default function App() {
     const [modelsLoaded, setModelsLoaded] = React.useState(false);
@@ -112,6 +113,8 @@ export default function App() {
         isChecked(true);
         canCheck(false);
         canAdd(false);
+        reverseSearch();
+        return;
         const imgNames = Object.keys(sessionStorage);
         const faceDisplayed = currFace[0];
         const faceMatcher = new faceapi.FaceMatcher(faceDisplayed);
@@ -139,6 +142,12 @@ export default function App() {
             );
             canAdd(true);
         }
+    }
+
+    function reverseSearch() {
+        axios.post('http://localhost:5000/api/', {src: imgSrc}).then((res) => {
+            console.log(res);
+        })
     }
 
     function addImg() {
