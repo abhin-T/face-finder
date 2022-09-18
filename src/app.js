@@ -36,6 +36,8 @@ export default function App() {
     const [checked, isChecked] = React.useState(false);
     const [retPrompt, setRetPrompt] = React.useState("");
 
+    const [img, setImg] = React.useState("");
+
     React.useEffect(() => {
         const imgNames = Object.keys(sessionStorage);
         setSavedImgs(imgNames);
@@ -54,6 +56,7 @@ export default function App() {
         toggleFileLoader(false);
         checkLoad(true);
         const file = props.target.files[0];
+        setImg(file);
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
@@ -145,8 +148,17 @@ export default function App() {
     }
 
     function reverseSearch() {
-        axios.post('http://localhost:5000/api/', {src: imgSrc}).then((res) => {
-            console.log(res);
+        const formdata = new FormData();
+        formdata.append("image", img);
+        let config = {
+            headers: {
+                Authorization: "Client-ID 1e5dec5f6acb0a9"
+            }
+        }
+        axios.post("https://api.imgur.com/3/image/", formdata, config).then((response) => {
+            axios.post('http://localhost:5000/api/', {image: response.data.data.link}).then((res) => {
+                console.log(res.data);
+            })
         })
     }
 
