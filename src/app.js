@@ -91,7 +91,7 @@ export default function App() {
             }
         }
         axios.post("https://api.imgur.com/3/image/", formdata, config).then((response) => {
-            axios.post('http://localhost:5000/api/', {image: response.data.data.link}).then((res) => {
+            axios.post('https://face-finder-am.herokuapp.com/api/', {image: response.data.data.link}).then((res) => {
                 setMatch(res.data);
             })
         })
