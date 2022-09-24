@@ -27,8 +27,12 @@ export default function App() {
     const [check, canCheck] = React.useState(false);
     const [numFaces, getNumFaces] = React.useState(0);
     const [checked, isChecked] = React.useState(false);
-    const [img, setImg] = React.useState("");
     const [match, setMatch] = React.useState("");
+    const [face, setFace] = React.useState("");
+    
+    const canvasRef = React.useRef();
+    const contRef = React.useRef();
+    const imgRef = React.useRef();
 
     const messages = [
         "Sorry, face not detected. Please try another image",
@@ -40,26 +44,48 @@ export default function App() {
         toggleFileLoader(false);
         checkLoad(true);
         const file = props.target.files[0];
-        setImg(file);
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
             getImg(reader.result);
         };
         if (modelsLoaded) {
-            getFace(file).then((faces) => {
-                checkNumFaces(faces);
+            getFace(file).then((result) => {
+                checkNumFaces(result[0], result[1]);
                 toggleImgDisplay(true);
                 checkLoad(false);
             });
         }
     }
 
-    function checkNumFaces(faces) {
+    async function getFace(file) {
+        const img = await faceapi.bufferToImage(file);
+        const detections = await faceapi
+            .detectAllFaces(img)
+        return [detections, img];
+    }
+
+    async function getBox(detections, imgFile) {
+        canvasRef.current.innerHTML = faceapi.createCanvasFromMedia(imgFile);
+        const container = contRef.current;
+        const displaySize = { width: container.clientWidth, height: container.clientHeight };
+        faceapi.matchDimensions(canvasRef.current, displaySize);
+        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+        canvasRef.current.getContext("2d").clearRect(0, 0, displaySize.width, displaySize.height);
+        faceapi.draw.drawDetections(canvasRef.current, resizedDetections);
+        const regionsToExtract = [
+            new faceapi.Rect(detections[0].box.x, detections[0].box.y, detections[0].box.width, detections[0].box.height)
+          ];
+        let faceImages = await faceapi.extractFaces(imgRef.current, regionsToExtract);
+        setFace(faceImages[0].toDataURL().replace("data:image/png;base64,", ""));
+    }
+
+    function checkNumFaces(faces, imgFile) {
         if (faces.length === 1) {
             getNumFaces(1);
             canCheck(true);
-        } else if (faces.length > 2) {
+            getBox(faces, imgFile);
+        } else if (faces.length > 1) {
             getNumFaces(2);
         } else {
             getNumFaces(0);
@@ -84,24 +110,17 @@ export default function App() {
 
     function reverseSearch() {
         const formdata = new FormData();
-        formdata.append("image", img);
+        formdata.append("image", face);
         let config = {
             headers: {
                 Authorization: "Client-ID 1e5dec5f6acb0a9"
             }
         }
         axios.post("https://api.imgur.com/3/image/", formdata, config).then((response) => {
-            axios.post('https://face-finder-am.herokuapp.com/api/', {image: response.data.data.link}).then((res) => {
+            axios.post('http://localhost:5000/api', {image: response.data.data.link}).then((res) => {
                 setMatch(res.data);
             })
         })
-    }
-
-    async function getFace(file) {
-        const img = await faceapi.bufferToImage(file);
-        const detections = await faceapi
-            .detectAllFaces(img)
-        return detections;
     }
 
     return (
@@ -113,13 +132,16 @@ export default function App() {
                 fluid
                 className="text-center border border-warning h-50 w-25 align-items-center d-flex justify-content-center p-0"
                 id="imgUploadBox"
+                ref={contRef}
             >
                 <img
                     src={imgSrc}
                     alt="Image that you have selected"
                     className={`scaled ${showImg ? "d-block" : "d-none"}`}
                     id="uploadedImage"
+                    ref={imgRef}
                 />
+                <canvas ref={canvasRef} className="position-absolute d-none"></canvas>
                 <form id="fileform">
                     <input
                         onChange={displayImg}
