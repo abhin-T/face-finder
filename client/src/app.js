@@ -117,7 +117,7 @@ export default function App() {
             }
         }
         axios.post("https://api.imgur.com/3/image/", formdata, config).then((response) => {
-            axios.post('http://localhost:5000/api', {image: response.data.data.link}).then((res) => {
+            axios.post('/api', {image: response.data.data.link}).then((res) => {
                 setMatch(res.data);
             })
         })
@@ -170,7 +170,7 @@ export default function App() {
                         <button
                             onClick={removeImg}
                             disabled={!showImg || (checked && match.length === 0) }
-                            className="btn btn-lg btn-primary text-nowrap"
+                            className="btn btn-lg btn-primary text-nowrap mb-3"
                         >
                             Remove Img
                         </button>
@@ -179,7 +179,7 @@ export default function App() {
                         <button
                             onClick={checkImg}
                             disabled={!check}
-                            className="btn btn-lg btn-success text-nowrap"
+                            className="btn btn-lg btn-success text-nowrap mb-3"
                         >
                             Check Img
                         </button>
