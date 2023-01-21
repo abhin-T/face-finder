@@ -4,6 +4,7 @@ import "./app.css";
 import React from "react";
 import * as faceapi from "face-api.js";
 import axios from 'axios';
+import { imgur_api } from '../../config.js'
 
 export default function App() {
     const [modelsLoaded, setModelsLoaded] = React.useState(false);
@@ -113,7 +114,7 @@ export default function App() {
         formdata.append("image", face);
         let config = {
             headers: {
-                Authorization: "Client-ID 1e5dec5f6acb0a9"
+                Authorization: imgur_api
             }
         }
         axios.post("https://api.imgur.com/3/image/", formdata, config).then((response) => {

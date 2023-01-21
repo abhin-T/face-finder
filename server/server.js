@@ -1,3 +1,5 @@
+import { serpapi_api } from '../config.js'
+
 const express = require('express');
 const app = express();
 const axios = require('axios');
@@ -18,7 +20,7 @@ app.use(express.urlencoded({extended: false}));
 
 app.post("/api", (req, res) => {
     const imgSource = req.body.image;
-    axios.get(`https://serpapi.com/search.json?engine=google_reverse_image&image_url=${imgSource}&api_key=0f3db242ed06c9cd4b3eed9b2042812598a2164ec8edfa434fbf6fb23cc0608b`).then((response) => {
+    axios.get(`https://serpapi.com/search.json?engine=google_reverse_image&image_url=${imgSource}&api_key=${serpapi_api}`).then((response) => {
         const imgResults = response.data.image_results;
         let paragraph = "";
         for (i=0; i<imgResults.length; i++) {
